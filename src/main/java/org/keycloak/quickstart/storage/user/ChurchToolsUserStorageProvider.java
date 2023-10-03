@@ -26,19 +26,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class ChurchToolsUserStorageProvider implements UserStorageProvider,
+public class ChurchToolsUserStorageProvider implements
+        UserStorageProvider,
         UserLookupProvider,
-        CredentialInputUpdater,
         CredentialInputValidator,
-        OnUserCache,
-        UserQueryProvider {
+        CredentialInputUpdater,
+        OnUserCache {
     private static final Logger logger = Logger.getLogger(ChurchToolsUserStorageProvider.class);
     public static final String PASSWORD_CACHE_KEY = UserAdapter.class.getName() + ".password";
 
     protected ComponentModel model;
     protected KeycloakSession session;
 
-    private ServerCredentials serverCredentials;
+    private final ServerCredentials serverCredentials;
 
     ChurchToolsUserStorageProvider(KeycloakSession session, ComponentModel model, ServerCredentials serverCredentials) {
         this.session = session;
@@ -46,25 +46,25 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
         this.serverCredentials = serverCredentials;
     }
 
+    // UserStorageProvider
+    // No cleanup required because this provider does not use a persistent storage
     @Override
     public void preRemove(RealmModel realm) {
-
     }
 
     @Override
     public void preRemove(RealmModel realm, GroupModel group) {
-
     }
 
     @Override
     public void preRemove(RealmModel realm, RoleModel role) {
-
     }
 
     @Override
     public void close() {
     }
 
+    // UserLookupProvider
     @Override
     public int getUsersCount(RealmModel realm) {
         CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
@@ -128,7 +128,7 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
         CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
         UserEntity userEntity = ChurchToolsApi.getUserById(serverCredentials, cookieManager, persistenceId);
 
-        if (userEntity == null) {
+        if (userEntity == null || userEntity.getId() == null || userEntity.getId().isEmpty()) {
             logger.info("could not find user by id: " + id);
             return null;
         }
@@ -143,7 +143,7 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
         CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
         UserEntity userEntity = ChurchToolsApi.getUserByEmailOrUsername(serverCredentials, cookieManager, username);
 
-        if (userEntity == null) {
+        if (userEntity == null || userEntity.getId() == null || userEntity.getId().isEmpty()) {
             logger.info("could not find user by username: " + username);
             return null;
         }
@@ -158,7 +158,7 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
         CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
         UserEntity userEntity = ChurchToolsApi.getUserByEmailOrUsername(serverCredentials, cookieManager, email);
 
-        if (userEntity == null) {
+        if (userEntity == null || userEntity.getId() == null || userEntity.getId().isEmpty()) {
             logger.info("could not find user by email: " + email);
             return null;
         }
@@ -166,13 +166,11 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
         return new UserAdapter(session, realm, model, userEntity);
     }
 
-
+    // CredentialInputValidator
     @Override
-    public void onCache(RealmModel realm, CachedUserModel user, UserModel delegate) {
-        String password = ((UserAdapter) delegate).getPassword();
-        if (password != null) {
-            user.getCachedWith().put(PASSWORD_CACHE_KEY, password);
-        }
+    public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
+        // All users for which a UserModel can be created must have username and password set and are therefore valid
+        return supportsCredentialType(credentialType);
     }
 
     @Override
@@ -181,18 +179,19 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
     }
 
     @Override
-    public boolean updateCredential(RealmModel realm, UserModel user, CredentialInput input) {
-        if (input.getType().equals(PasswordCredentialModel.TYPE))
-            throw new ReadOnlyException("user is read only for this update");
-        return false;
+    public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
+        if (!supportsCredentialType(input.getType())) return false;
+        return ChurchToolsApi.credentialsValid(serverCredentials, user.getEmail(), input.getChallengeResponse());
     }
 
-    public UserAdapter getUserAdapter(UserModel user) {
-        if (user instanceof CachedUserModel) {
-            return (UserAdapter) ((CachedUserModel) user).getDelegateForUpdate();
-        } else {
-            return (UserAdapter) user;
-        }
+    // CredentialInputUpdater
+    // This interface must be implemented to prevent password changes to Keycloak local storage
+    @Override
+    public boolean updateCredential(RealmModel realm, UserModel user, CredentialInput input) {
+        if (supportsCredentialType(input.getType()))
+            throw new ReadOnlyException("User is read-only for this update");
+
+        return false;
     }
 
     @Override
@@ -203,28 +202,4 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
     public Stream<String> getDisableableCredentialTypesStream(RealmModel realm, UserModel user) {
         return Stream.empty();
     }
-
-    @Override
-    public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
-        return supportsCredentialType(credentialType) && getPassword(user) != null;
-    }
-
-
-    @Override
-    public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
-        if (!supportsCredentialType(input.getType()) || !(input instanceof UserCredentialModel)) return false;
-        UserCredentialModel cred = (UserCredentialModel) input;
-        return ChurchToolsApi.credentialsValid(serverCredentials, user.getEmail(), cred.getValue());
-    }
-
-    public String getPassword(UserModel user) {
-        String password = null;
-        if (user instanceof CachedUserModel) {
-            password = (String) ((CachedUserModel) user).getCachedWith().get(PASSWORD_CACHE_KEY);
-        } else if (user instanceof UserAdapter) {
-            password = ((UserAdapter) user).getPassword();
-        }
-        return password;
-    }
-
 }
