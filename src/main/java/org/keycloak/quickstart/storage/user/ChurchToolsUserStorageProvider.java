@@ -15,20 +15,23 @@ import org.keycloak.models.cache.CachedUserModel;
 import org.keycloak.models.cache.OnUserCache;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.quickstart.storage.user.churchtools.model.ServerCredentials;
+import org.keycloak.storage.ReadOnlyException;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.user.UserLookupProvider;
+import org.keycloak.storage.user.UserQueryProvider;
 
 import java.net.CookieManager;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class ChurchToolsUserStorageProvider implements UserStorageProvider,
         UserLookupProvider,
         CredentialInputUpdater,
         CredentialInputValidator,
-        OnUserCache {
+        OnUserCache,
+        UserQueryProvider {
     private static final Logger logger = Logger.getLogger(ChurchToolsUserStorageProvider.class);
     public static final String PASSWORD_CACHE_KEY = UserAdapter.class.getName() + ".password";
 
@@ -40,7 +43,7 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
     ChurchToolsUserStorageProvider(KeycloakSession session, ComponentModel model, ServerCredentials serverCredentials) {
         this.session = session;
         this.model = model;
-        this.serverCredentials=serverCredentials;
+        this.serverCredentials = serverCredentials;
     }
 
     @Override
@@ -61,6 +64,57 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
     @Override
     public void close() {
     }
+
+    @Override
+    public int getUsersCount(RealmModel realm) {
+        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
+        return ChurchToolsApi.getPersonCount(serverCredentials, cookieManager);
+    }
+
+    @Override
+    public Stream<UserModel> searchForUserStream(RealmModel realm, String search, Integer firstResult, Integer maxResults) {
+        logger.info("searchForUserStream by Searchterm firstResult"+firstResult+ " maxResults: "+maxResults+ " searchTerm:" +search);
+        double pages = 1;
+        if (firstResult > 1) {
+            pages = firstResult.doubleValue() / maxResults.doubleValue();
+        }
+
+        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
+        List<UserEntity> persons = ChurchToolsApi.findPersons(serverCredentials, cookieManager, search, (int) pages, maxResults);
+
+        return persons.stream().map(p -> mapUserEntity(p, realm)).toList().stream();
+    }
+
+    private UserModel mapUserEntity(UserEntity userEntity, RealmModel realm) {
+        return new UserAdapter(session, realm, model, userEntity);
+    }
+
+    @Override
+    public Stream<UserModel> searchForUserStream(RealmModel realm, Map<String, String> params, Integer firstResult, Integer maxResults) {
+        logger.info("searchForUserStream with Search Params: firstResult"+firstResult+ " maxResults "+maxResults);
+
+        // only support searching by username
+        String usernameSearchString = params.get("keycloak.session.realm.users.query.search");
+        if (usernameSearchString != null) {
+            return searchForUserStream(realm, usernameSearchString, firstResult, maxResults);
+        }
+
+        // if we are not searching by username, return all users
+        return searchForUserStream(realm, "", firstResult, maxResults);
+    }
+
+    @Override
+    public Stream<UserModel> getGroupMembersStream(RealmModel realm, GroupModel group, Integer firstResult, Integer maxResults) {
+        logger.info("getGroupMembersStream");
+        return Stream.empty();
+    }
+
+    @Override
+    public Stream<UserModel> searchForUserByUserAttributeStream(RealmModel realm, String attrName, String attrValue) {
+        logger.info("searchForUserByUserAttributeStream");
+        return Stream.empty();
+    }
+
 
     @Override
     public UserModel getUserById(RealmModel realm, String id) {
@@ -126,12 +180,9 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
 
     @Override
     public boolean updateCredential(RealmModel realm, UserModel user, CredentialInput input) {
-        if (!supportsCredentialType(input.getType()) || !(input instanceof UserCredentialModel)) return false;
-        UserCredentialModel cred = (UserCredentialModel) input;
-        UserAdapter adapter = getUserAdapter(user);
-        adapter.setPassword(cred.getValue());
-
-        return true;
+        if (input.getType().equals(PasswordCredentialModel.TYPE))
+            throw new ReadOnlyException("user is read only for this update");
+        return false;
     }
 
     public UserAdapter getUserAdapter(UserModel user) {
@@ -144,21 +195,11 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
 
     @Override
     public void disableCredentialType(RealmModel realm, UserModel user, String credentialType) {
-        if (!supportsCredentialType(credentialType)) return;
-
-        getUserAdapter(user).setPassword(null);
-
     }
 
     @Override
     public Stream<String> getDisableableCredentialTypesStream(RealmModel realm, UserModel user) {
-        if (getUserAdapter(user).getPassword() != null) {
-            Set<String> set = new HashSet<>();
-            set.add(PasswordCredentialModel.TYPE);
-            return set.stream();
-        } else {
-            return Stream.empty();
-        }
+        return Stream.empty();
     }
 
     @Override

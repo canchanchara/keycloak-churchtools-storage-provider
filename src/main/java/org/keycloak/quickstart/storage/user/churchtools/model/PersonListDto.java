@@ -1,14 +1,25 @@
 package org.keycloak.quickstart.storage.user.churchtools.model;
 
+import java.util.List;
+
 public class PersonListDto {
 
-    private PersonDto data;
+    private List<PersonDto> data;
+    private MetaDto meta;
 
-    public PersonDto getData() {
+    public MetaDto getMeta() {
+        return meta;
+    }
+
+    public void setMeta(MetaDto meta) {
+        this.meta = meta;
+    }
+
+    public List<PersonDto> getData() {
         return data;
     }
 
-    public void setData(PersonDto data) {
+    public void setData(List<PersonDto> data) {
         this.data = data;
     }
 }

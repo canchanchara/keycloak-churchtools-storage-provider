@@ -2,12 +2,14 @@ package org.keycloak.quickstart.storage.user;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.quickstart.storage.user.churchtools.model.LoginDto;
 import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
 import org.keycloak.quickstart.storage.user.churchtools.model.PersonListDto;
 import org.keycloak.quickstart.storage.user.churchtools.model.SearchResultDto;
 import org.keycloak.quickstart.storage.user.churchtools.model.ServerCredentials;
+import org.keycloak.quickstart.storage.user.churchtools.model.SinglePersonListDto;
 
 import java.io.IOException;
 import java.net.CookieManager;
@@ -17,6 +19,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 public class ChurchToolsApi {
 
@@ -35,7 +38,7 @@ public class ChurchToolsApi {
         logger.info("Find getUserByEmail: " + email);
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/search?query=" + email + "&domainTypes[]=person"))
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/search?query=" + email + "&domainTypes[]=person"))
                     .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
                     .GET()
                     .build();
@@ -62,7 +65,7 @@ public class ChurchToolsApi {
         logger.info("getUserById id:" + id);
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/persons/" + id))
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/persons/" + id))
                     .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
                     .GET()
                     .build();
@@ -74,7 +77,7 @@ public class ChurchToolsApi {
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
 
-            PersonListDto personListDto = createMapper().readValue(response.body(), PersonListDto.class);
+            SinglePersonListDto personListDto = createMapper().readValue(response.body(), SinglePersonListDto.class);
 
             PersonDto personDto = personListDto.getData();
 
@@ -93,6 +96,115 @@ public class ChurchToolsApi {
         }
     }
 
+    public static Integer getPersonCount(ServerCredentials serverCredentials, CookieManager cookieManager) {
+        logger.info("getPersonCount");
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/persons?is_archived=false&page=" + 1 + "&limit=" + 1))
+                    .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+                    .GET()
+                    .build();
+
+
+            HttpResponse<String> response = HttpClient.newBuilder()
+                    .cookieHandler(cookieManager)
+                    .build()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+
+
+            PersonListDto personListDto = createMapper().readValue(response.body(), PersonListDto.class);
+
+            return personListDto.getMeta().getCount();
+
+
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            logger.error(e);
+            throw new ChurchToolsException(e.getMessage());
+        }
+    }
+
+
+    public static List<String> findPersonsBySearchTerm(ServerCredentials serverCredentials, CookieManager cookieManager, String userSearchTerm) {
+
+        logger.info("findPersonsBySearchTerm: " + userSearchTerm);
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/search?query=" + userSearchTerm + "&domainTypes[]=person"))
+                    .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = HttpClient.newBuilder()
+                    .cookieHandler(cookieManager)
+                    .build()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+
+            SearchResultDto searchResultDto = createMapper().readValue(response.body(), SearchResultDto.class);
+
+            return searchResultDto.getData().stream().map(e -> e.getDomainIdentifier()).toList();
+
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            logger.error(e);
+            throw new ChurchToolsException(e.getMessage());
+        }
+    }
+
+    public static List<UserEntity> findPersons(ServerCredentials serverCredentials, CookieManager cookieManager, String userSearchTerm, Integer page, Integer maxResults) {
+
+        String personFilter = "";
+
+        if (!userSearchTerm.equals("")) {
+            List<String> personIds = findPersonsBySearchTerm(serverCredentials, cookieManager, userSearchTerm);
+            for (String personId : personIds) {
+                if (personFilter.equals("")) {
+                    personFilter = "ids%5B%5D=" + personId;
+                } else {
+                    personFilter = personFilter+"&ids%5B%5D=" + personId;
+                }
+            }
+        }
+
+        logger.info("findPersons searchterm:" + userSearchTerm + " Page: " + page + " maxResults: " + maxResults);
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/persons?is_archived=false&page=" + page + "&limit=" + maxResults + "&" + personFilter))
+                    .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+                    .GET()
+                    .build();
+
+
+            HttpResponse<String> response = HttpClient.newBuilder()
+                    .cookieHandler(cookieManager)
+                    .build()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+
+            //logger.info(response.body());
+
+            PersonListDto personListDto = createMapper().readValue(response.body(), PersonListDto.class);
+
+            List<PersonDto> personList = personListDto.getData();
+
+            return personList.stream()
+                    .filter(p -> StringUtils.isNotEmpty(p.getCmsUserId()))
+                    .filter(p -> p.getCmsUserId().contains(userSearchTerm))
+                    .map(p -> mapPerson(p)).toList();
+
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            logger.error(e);
+            throw new ChurchToolsException(e.getMessage());
+        }
+    }
+
+    private static UserEntity mapPerson(PersonDto personDto) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setId(personDto.getId());
+        userEntity.setEmail(personDto.getEmail());
+        userEntity.setUsername(personDto.getCmsUserId());
+        userEntity.setFirstname(personDto.getFirstName());
+        userEntity.setLastname(personDto.getLastName());
+        return userEntity;
+    }
+
     public static boolean credentialsValid(ServerCredentials serverCredentials, String email, String passwort) {
         try {
 
@@ -104,7 +216,7 @@ public class ChurchToolsApi {
             String loginJson = createMapper().writeValueAsString(loginDto);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/login"))
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/login"))
                     .headers(CONTENT_TYPE, "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(loginJson))
                     .build();
@@ -133,7 +245,7 @@ public class ChurchToolsApi {
 
         try {
 
-            logger.info("Login to "+serverCredentials.getInstance());
+            logger.info("Login to " + serverCredentials.getInstance());
 
             LoginDto loginDto = new LoginDto();
             loginDto.setUsername(serverCredentials.getUsername());
@@ -143,7 +255,7 @@ public class ChurchToolsApi {
             String loginJson = createMapper().writeValueAsString(loginDto);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/login"))
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/login"))
                     .headers(CONTENT_TYPE, "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(loginJson))
                     .build();
@@ -155,8 +267,8 @@ public class ChurchToolsApi {
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
-            if(response.statusCode() != 200) {
-                throw new RuntimeException("Ungültiger Login! "+response.body());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Ungültiger Login! " + response.body());
             }
 
             return cookieManager;

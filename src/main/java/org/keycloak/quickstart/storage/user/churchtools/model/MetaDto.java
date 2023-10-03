@@ -2,13 +2,13 @@ package org.keycloak.quickstart.storage.user.churchtools.model;
 
 public class MetaDto {
 
-    private String count;
+    private Integer count;
 
-    public String getCount() {
+    public Integer getCount() {
         return count;
     }
 
-    public void setCount(String count) {
+    public void setCount(Integer count) {
         this.count = count;
     }
 }
