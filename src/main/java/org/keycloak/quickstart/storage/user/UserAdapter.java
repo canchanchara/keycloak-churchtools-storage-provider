@@ -5,6 +5,7 @@ import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
@@ -40,7 +41,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     @Override
     public void setUsername(String username) {
         entity.setUsername(username);
-
     }
 
     @Override
@@ -51,6 +51,29 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     @Override
     public String getEmail() {
         return entity.getEmail();
+    }
+
+
+    @Override
+    public void setLastName(String lastName) {
+        entity.setLastname(lastName);
+    }
+
+
+    @Override
+    public void setFirstName(String firstName) {
+        entity.setFirstname(firstName);
+    }
+
+
+    @Override
+    public String getFirstName() {
+        return entity.getFirstname();
+    }
+
+    @Override
+    public String getLastName() {
+        return entity.getLastname();
     }
 
     @Override
@@ -87,8 +110,14 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public String getFirstAttribute(String name) {
-        if (name.equals("phone")) {
-            return entity.getPhone();
+        if (name.equals("username")) {
+            return entity.getUsername();
+        } else if (name.equals("email")) {
+            return entity.getEmail();
+        } else if (name.equals("firstName")) {
+            return entity.getFirstname();
+        } else if (name.equals("lastName")) {
+            return entity.getLastname();
         } else {
             return super.getFirstAttribute(name);
         }
@@ -96,19 +125,33 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public Map<String, List<String>> getAttributes() {
-        Map<String, List<String>> attrs = super.getAttributes();
-        MultivaluedHashMap<String, String> all = new MultivaluedHashMap<>();
-        all.putAll(attrs);
-        all.add("phone", entity.getPhone());
-        return all;
+        MultivaluedHashMap<String, String> attributes = new MultivaluedHashMap<>();
+
+        attributes.add(UserModel.USERNAME, getUsername());
+        attributes.add(UserModel.EMAIL, getEmail());
+        attributes.add(UserModel.FIRST_NAME, getFirstName());
+        attributes.add(UserModel.LAST_NAME, getLastName());
+        return attributes;
     }
 
     @Override
     public Stream<String> getAttributeStream(String name) {
-        if (name.equals("phone")) {
-            List<String> phone = new LinkedList<>();
-            phone.add(entity.getPhone());
-            return phone.stream();
+        if (name.equals("username")) {
+            List<String> username = new LinkedList<>();
+            username.add(entity.getUsername());
+            return username.stream();
+        } else if (name.equals("email")) {
+            List<String> email = new LinkedList<>();
+            email.add(entity.getEmail());
+            return email.stream();
+        } else if (name.equals("firstName")) {
+            List<String> firstName = new LinkedList<>();
+            firstName.add(entity.getFirstname());
+            return firstName.stream();
+        } else if (name.equals("lastName")) {
+            List<String> lastName = new LinkedList<>();
+            lastName.add(entity.getLastname());
+            return lastName.stream();
         } else {
             return super.getAttributeStream(name);
         }

@@ -20,6 +20,9 @@ import java.net.http.HttpResponse;
 
 public class ChurchToolsApi {
 
+    public static final String CONTENT_TYPE_TEXT_PLAIN = "text/plain;charset=UTF-8";
+    public static final String CONTENT_TYPE = "Content-Type";
+
     private ChurchToolsApi() {
 
     }
@@ -33,7 +36,7 @@ public class ChurchToolsApi {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/search?query=" + email + "&domainTypes[]=person"))
-                    .headers("Content-Type", "text/plain;charset=UTF-8")
+                    .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
                     .GET()
                     .build();
 
@@ -60,7 +63,7 @@ public class ChurchToolsApi {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/persons/" + id))
-                    .headers("Content-Type", "text/plain;charset=UTF-8")
+                    .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
                     .GET()
                     .build();
 
@@ -79,6 +82,8 @@ public class ChurchToolsApi {
             userEntity.setId(personDto.getId());
             userEntity.setEmail(personDto.getEmail());
             userEntity.setUsername(personDto.getCmsUserId());
+            userEntity.setFirstname(personDto.getFirstName());
+            userEntity.setLastname(personDto.getLastName());
 
             return userEntity;
 
@@ -100,7 +105,7 @@ public class ChurchToolsApi {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/login"))
-                    .headers("Content-Type", "application/json")
+                    .headers(CONTENT_TYPE, "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(loginJson))
                     .build();
 
@@ -108,7 +113,12 @@ public class ChurchToolsApi {
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
+            /**
+             * Falls totp aktiviert ist, wird der Login hier trotzdem zugelassen
+             * TODO: Per Property das verhalten bestimmen lassen
+             */
             boolean loginValid = response.statusCode() == 200;
+
             logger.info("credentialsValid: " + loginValid);
             return loginValid;
 
@@ -134,7 +144,7 @@ public class ChurchToolsApi {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI("https://"+serverCredentials.getInstance()+".church.tools/api/login"))
-                    .headers("Content-Type", "application/json")
+                    .headers(CONTENT_TYPE, "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(loginJson))
                     .build();
 

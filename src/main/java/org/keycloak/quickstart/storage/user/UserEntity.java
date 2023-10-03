@@ -4,8 +4,9 @@ package org.keycloak.quickstart.storage.user;
 public class UserEntity {
     private String id;
 
-
     private String username;
+    private String firstname;
+    private String lastname;
     private String email;
     private String password;
     private String phone;
@@ -20,6 +21,23 @@ public class UserEntity {
 
     public String getUsername() {
         return username;
+    }
+
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 
     public void setUsername(String username) {
