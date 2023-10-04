@@ -73,7 +73,7 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
 
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, String search, Integer firstResult, Integer maxResults) {
-        logger.info("searchForUserStream by Searchterm firstResult"+firstResult+ " maxResults: "+maxResults+ " searchTerm:" +search);
+        logger.info("searchForUserStream by Searchterm firstResult" + firstResult + " maxResults: " + maxResults + " searchTerm:" + search);
 
         CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
         List<UserEntity> persons = ChurchToolsApi.findPersons(serverCredentials, cookieManager, search, firstResult, maxResults);
@@ -87,25 +87,22 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
 
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, Map<String, String> params, Integer firstResult, Integer maxResults) {
-        logger.info("searchForUserStream with Search Params: firstResult"+firstResult+ " maxResults "+maxResults);
+        logger.info("searchForUserStream with Search Params: firstResult" + firstResult + " maxResults " + maxResults);
 
-        // only support searching by username
-        String usernameSearchString = params.get("keycloak.session.realm.users.query.search");
+        String searchString = params.get("keycloak.session.realm.users.query.search");
 
-
-        if (usernameSearchString != null) {
-
-            usernameSearchString = usernameSearchString.trim();
-
-            // Suche nach "*" kann Church Tools nicht verstehen, daher Suche nach "" empty String
-            if(usernameSearchString.equals("*")) {
-                return searchForUserStream(realm, "", firstResult, maxResults);
-            }
-
-            return searchForUserStream(realm, usernameSearchString, firstResult, maxResults);
+        if (searchString == null) {
+            return searchForUserStream(realm, "", firstResult, maxResults);
         }
 
-        return searchForUserStream(realm, "", firstResult, maxResults);
+        searchString = searchString.trim();
+
+        // Suche nach "*" kann Church Tools nicht verstehen, daher Suche nach "" empty String
+        if (searchString.equals("*")) {
+            return searchForUserStream(realm, "", firstResult, maxResults);
+        }
+
+        return searchForUserStream(realm, searchString, firstResult, maxResults);
     }
 
     @Override
