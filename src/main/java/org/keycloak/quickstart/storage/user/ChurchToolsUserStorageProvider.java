@@ -74,13 +74,9 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, String search, Integer firstResult, Integer maxResults) {
         logger.info("searchForUserStream by Searchterm firstResult"+firstResult+ " maxResults: "+maxResults+ " searchTerm:" +search);
-        double pages = 1;
-        if (firstResult > 1) {
-            pages = firstResult.doubleValue() / maxResults.doubleValue();
-        }
 
         CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        List<UserEntity> persons = ChurchToolsApi.findPersons(serverCredentials, cookieManager, search, (int) pages, maxResults);
+        List<UserEntity> persons = ChurchToolsApi.findPersons(serverCredentials, cookieManager, search, firstResult, maxResults);
 
         return persons.stream().map(p -> mapUserEntity(p, realm)).toList().stream();
     }
@@ -95,11 +91,20 @@ public class ChurchToolsUserStorageProvider implements UserStorageProvider,
 
         // only support searching by username
         String usernameSearchString = params.get("keycloak.session.realm.users.query.search");
+
+
         if (usernameSearchString != null) {
+
+            usernameSearchString = usernameSearchString.trim();
+
+            // Suche nach "*" kann Church Tools nicht verstehen, daher Suche nach "" empty String
+            if(usernameSearchString.equals("*")) {
+                return searchForUserStream(realm, "", firstResult, maxResults);
+            }
+
             return searchForUserStream(realm, usernameSearchString, firstResult, maxResults);
         }
 
-        // if we are not searching by username, return all users
         return searchForUserStream(realm, "", firstResult, maxResults);
     }
 

@@ -83,6 +83,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public void setSingleAttribute(String name, String value) {
+        logger.debug("setSingleAttribute: "+name);
+
         if (name.equals("phone")) {
             entity.setPhone(value);
         } else {
@@ -92,6 +94,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public void removeAttribute(String name) {
+        logger.debug("removeAttribute: "+name);
+
         if (name.equals("phone")) {
             entity.setPhone(null);
         } else {
@@ -101,6 +105,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public void setAttribute(String name, List<String> values) {
+        logger.debug("setAttribute: "+name);
+
         if (name.equals("phone")) {
             entity.setPhone(values.get(0));
         } else {
@@ -110,6 +116,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public String getFirstAttribute(String name) {
+        logger.debug("getFirstAttribute: "+name);
         if (name.equals("username")) {
             return entity.getUsername();
         } else if (name.equals("email")) {
@@ -125,6 +132,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public Map<String, List<String>> getAttributes() {
+        logger.debug("getAttributes");
+
         MultivaluedHashMap<String, String> attributes = new MultivaluedHashMap<>();
 
         attributes.add(UserModel.USERNAME, getUsername());
@@ -136,6 +145,9 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public Stream<String> getAttributeStream(String name) {
+
+        logger.debug("getAttributeStream:"+ name);
+
         if (name.equals("username")) {
             List<String> username = new LinkedList<>();
             username.add(entity.getUsername());

@@ -149,25 +149,28 @@ public class ChurchToolsApi {
         }
     }
 
-    public static List<UserEntity> findPersons(ServerCredentials serverCredentials, CookieManager cookieManager, String userSearchTerm, Integer page, Integer maxResults) {
+    /**
+     * liefert maximal 500 Personen zurück
+     */
+    public static List<UserEntity> findPersons(ServerCredentials serverCredentials, CookieManager cookieManager, String userSearchTerm, Integer firstResult, Integer maxResults) {
 
         String personFilter = "";
 
-        if (!userSearchTerm.equals("")) {
+        if (StringUtils.isNotEmpty(userSearchTerm)) {
             List<String> personIds = findPersonsBySearchTerm(serverCredentials, cookieManager, userSearchTerm);
             for (String personId : personIds) {
                 if (personFilter.equals("")) {
                     personFilter = "ids%5B%5D=" + personId;
                 } else {
-                    personFilter = personFilter+"&ids%5B%5D=" + personId;
+                    personFilter = personFilter + "&ids%5B%5D=" + personId;
                 }
             }
         }
 
-        logger.info("findPersons searchterm:" + userSearchTerm + " Page: " + page + " maxResults: " + maxResults);
+        logger.info("findPersons searchterm:" + userSearchTerm + " firstResult: " + firstResult + " maxResults: " + maxResults);
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/persons?is_archived=false&page=" + page + "&limit=" + maxResults + "&" + personFilter))
+                    .uri(new URI("https://" + serverCredentials.getInstance() + ".church.tools/api/persons?is_archived=false&page=" + 1 + "&limit=" + 500 + "&" + personFilter))
                     .headers(CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
                     .GET()
                     .build();
@@ -178,16 +181,18 @@ public class ChurchToolsApi {
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
-            //logger.info(response.body());
-
             PersonListDto personListDto = createMapper().readValue(response.body(), PersonListDto.class);
 
             List<PersonDto> personList = personListDto.getData();
 
             return personList.stream()
                     .filter(p -> StringUtils.isNotEmpty(p.getCmsUserId()))
-                    .filter(p -> p.getCmsUserId().contains(userSearchTerm))
-                    .map(p -> mapPerson(p)).toList();
+                    .map(p -> mapPerson(p)).toList()
+                    .stream()
+                    .skip(firstResult)
+                    .limit(maxResults)
+                    .toList();
+
 
         } catch (URISyntaxException | IOException | InterruptedException e) {
             logger.error(e);
