@@ -10,6 +10,7 @@ public class UserEntity {
     private String email;
     private String password;
     private String phone;
+    private String createdDate;
 
     public String getId() {
         return id;
@@ -23,6 +24,13 @@ public class UserEntity {
         return username;
     }
 
+    public String getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(String createdDate) {
+        this.createdDate = createdDate;
+    }
 
     public String getFirstname() {
         return firstname;

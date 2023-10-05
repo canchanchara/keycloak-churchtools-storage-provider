@@ -9,6 +9,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +84,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public void setSingleAttribute(String name, String value) {
-        logger.debug("setSingleAttribute: "+name);
+        logger.debug("setSingleAttribute: " + name);
 
         if (name.equals("phone")) {
             entity.setPhone(value);
@@ -94,7 +95,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public void removeAttribute(String name) {
-        logger.debug("removeAttribute: "+name);
+        logger.debug("removeAttribute: " + name);
 
         if (name.equals("phone")) {
             entity.setPhone(null);
@@ -105,7 +106,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public void setAttribute(String name, List<String> values) {
-        logger.debug("setAttribute: "+name);
+        logger.debug("setAttribute: " + name);
 
         if (name.equals("phone")) {
             entity.setPhone(values.get(0));
@@ -116,18 +117,23 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public String getFirstAttribute(String name) {
-        logger.debug("getFirstAttribute: "+name);
-        if (name.equals("username")) {
-            return entity.getUsername();
-        } else if (name.equals("email")) {
-            return entity.getEmail();
-        } else if (name.equals("firstName")) {
-            return entity.getFirstname();
-        } else if (name.equals("lastName")) {
-            return entity.getLastname();
-        } else {
-            return super.getFirstAttribute(name);
+        logger.debug("getFirstAttribute: " + name);
+
+        switch (name) {
+            case "username":
+                return entity.getUsername();
+            case "email":
+                return entity.getEmail();
+            case "firstName":
+                return entity.getFirstname();
+            case "lastName":
+                return entity.getLastname();
+            case "CREATED_TIMESTAMP":
+                return String.valueOf(Instant.parse(entity.getCreatedDate()).getEpochSecond()*1000);
+            default:
+                return super.getFirstAttribute(name);
         }
+
     }
 
     @Override
@@ -145,27 +151,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public Stream<String> getAttributeStream(String name) {
+        logger.debug("getAttributeStream:" + name);
+        List<String> attributeList = new LinkedList<>();
+        attributeList.add(getFirstAttribute(name));
+        return attributeList.stream();
 
-        logger.debug("getAttributeStream:"+ name);
-
-        if (name.equals("username")) {
-            List<String> username = new LinkedList<>();
-            username.add(entity.getUsername());
-            return username.stream();
-        } else if (name.equals("email")) {
-            List<String> email = new LinkedList<>();
-            email.add(entity.getEmail());
-            return email.stream();
-        } else if (name.equals("firstName")) {
-            List<String> firstName = new LinkedList<>();
-            firstName.add(entity.getFirstname());
-            return firstName.stream();
-        } else if (name.equals("lastName")) {
-            List<String> lastName = new LinkedList<>();
-            lastName.add(entity.getLastname());
-            return lastName.stream();
-        } else {
-            return super.getAttributeStream(name);
-        }
     }
 }

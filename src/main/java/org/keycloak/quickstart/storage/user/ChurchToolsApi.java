@@ -81,12 +81,7 @@ public class ChurchToolsApi {
 
             PersonDto personDto = personListDto.getData();
 
-            UserEntity userEntity = new UserEntity();
-            userEntity.setId(personDto.getId());
-            userEntity.setEmail(personDto.getEmail());
-            userEntity.setUsername(personDto.getCmsUserId());
-            userEntity.setFirstname(personDto.getFirstName());
-            userEntity.setLastname(personDto.getLastName());
+            UserEntity userEntity = mapPerson(personDto);
 
             return userEntity;
 
@@ -189,7 +184,7 @@ public class ChurchToolsApi {
                     .filter(p -> StringUtils.isNotEmpty(p.getCmsUserId()))
                     .map(p -> mapPerson(p)).toList()
                     .stream()
-                    .skip(firstResult == null ? 0 :firstResult)
+                    .skip(firstResult == null ? 0 : firstResult)
                     .limit(maxResults == null ? 1000 : maxResults)
                     .toList();
 
@@ -207,6 +202,7 @@ public class ChurchToolsApi {
         userEntity.setUsername(personDto.getCmsUserId());
         userEntity.setFirstname(personDto.getFirstName());
         userEntity.setLastname(personDto.getLastName());
+        userEntity.setCreatedDate(personDto.getMeta().getCreatedDate());
         return userEntity;
     }
 

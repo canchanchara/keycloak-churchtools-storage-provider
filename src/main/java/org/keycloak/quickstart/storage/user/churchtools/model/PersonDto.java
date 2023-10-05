@@ -7,6 +7,15 @@ public class PersonDto {
     private String lastName;
     private String email;
     private String cmsUserId;
+    private PersonMetaDto meta;
+
+    public PersonMetaDto getMeta() {
+        return meta;
+    }
+
+    public void setMeta(PersonMetaDto meta) {
+        this.meta = meta;
+    }
 
     public String getId() {
         return id;
