@@ -189,7 +189,7 @@ public class ChurchToolsApi {
                     .filter(p -> StringUtils.isNotEmpty(p.getCmsUserId()))
                     .map(p -> mapPerson(p)).toList()
                     .stream()
-                    .skip(firstResult == null ? 1 :firstResult)
+                    .skip(firstResult == null ? 0 :firstResult)
                     .limit(maxResults == null ? 1000 : maxResults)
                     .toList();
 
