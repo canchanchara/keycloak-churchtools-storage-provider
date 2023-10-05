@@ -6,6 +6,7 @@ import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
+import org.keycloak.storage.ReadOnlyException;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
@@ -84,35 +85,21 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public void setSingleAttribute(String name, String value) {
-        logger.debug("setSingleAttribute: " + name);
-
-        if (name.equals("phone")) {
-            entity.setPhone(value);
-        } else {
-            super.setSingleAttribute(name, value);
-        }
+        logger.info("setSingleAttribute: " + name);
+        throw new ReadOnlyException("user is read only for this update");
     }
 
     @Override
     public void removeAttribute(String name) {
-        logger.debug("removeAttribute: " + name);
+        logger.info("removeAttribute: " + name);
+        throw new ReadOnlyException("user is read only for this update");
 
-        if (name.equals("phone")) {
-            entity.setPhone(null);
-        } else {
-            super.removeAttribute(name);
-        }
     }
 
     @Override
     public void setAttribute(String name, List<String> values) {
-        logger.debug("setAttribute: " + name);
-
-        if (name.equals("phone")) {
-            entity.setPhone(values.get(0));
-        } else {
-            super.setAttribute(name, values);
-        }
+        logger.info("setAttribute: " + name);
+        throw new ReadOnlyException("user is read only for this update");
     }
 
     @Override

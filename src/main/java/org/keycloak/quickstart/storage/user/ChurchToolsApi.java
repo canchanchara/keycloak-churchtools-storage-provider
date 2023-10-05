@@ -2,6 +2,7 @@ package org.keycloak.quickstart.storage.user;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.quickstart.storage.user.churchtools.model.LoginDto;
@@ -50,6 +51,10 @@ public class ChurchToolsApi {
 
 
             SearchResultDto searchResultDto = createMapper().readValue(response.body(), SearchResultDto.class);
+
+            if(CollectionUtils.isEmpty(searchResultDto.getData())) {
+                return null;
+            }
 
             String personId = searchResultDto.getData().get(0).getDomainIdentifier();
             return getUserById(serverCredentials, cookieManager, personId);
