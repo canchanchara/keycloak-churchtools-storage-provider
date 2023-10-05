@@ -117,6 +117,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
                 return entity.getLastname();
             case "CREATED_TIMESTAMP":
                 return String.valueOf(Instant.parse(entity.getCreatedDate()).getEpochSecond()*1000);
+            case "EMAIL_VERIFIED": return "true";
             default:
                 return super.getFirstAttribute(name);
         }
