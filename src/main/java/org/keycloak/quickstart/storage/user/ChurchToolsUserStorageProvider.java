@@ -8,7 +8,6 @@ import org.keycloak.credential.CredentialInputValidator;
 import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
@@ -64,7 +63,7 @@ public class ChurchToolsUserStorageProvider implements
         PersonDto personDto = ChurchToolsApi.getUserById(serverCredentials, cookieManager, persistenceId);
 
         if (personDto == null) {
-            logger.debug("Could not find user with id: " + id);
+            logger.info("Could not find user with id: " + id);
             return null;
         }
 
@@ -87,7 +86,7 @@ public class ChurchToolsUserStorageProvider implements
         PersonDto personDto = ChurchToolsApi.getUserByEmailOrUsername(serverCredentials, cookieManager, identifier);
 
         if (personDto == null) {
-            logger.debug("Could not find user with email or username: " + identifier);
+            logger.info("Could not find user with email or username: " + identifier);
             return null;
         }
 

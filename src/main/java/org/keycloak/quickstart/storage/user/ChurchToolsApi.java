@@ -2,7 +2,6 @@ package org.keycloak.quickstart.storage.user;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.quickstart.storage.user.churchtools.model.*;
@@ -44,15 +43,18 @@ public class ChurchToolsApi {
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
+            if (response.statusCode() != 200) return null;
 
             SearchResultDto searchResultDto = createMapper().readValue(response.body(), SearchResultDto.class);
 
-            if(CollectionUtils.isEmpty(searchResultDto.getData())) {
-                return null;
+            // Search may return multiple people for the same username, but we need an exact match
+            for (SearchResultDataDto searchResult : searchResultDto.getData()) {
+                PersonDto personDto = getUserById(serverCredentials, cookieManager, searchResult.getDomainIdentifier());
+                if (personDto != null && (personDto.getEmail().equals(email) || personDto.getCmsUserId().equals(email)))
+                    return personDto;
             }
 
-            String personId = searchResultDto.getData().get(0).getDomainIdentifier();
-            return getUserById(serverCredentials, cookieManager, personId);
+            return null;
 
         } catch (URISyntaxException | InterruptedException | IOException e) {
             logger.error(e);
