@@ -51,18 +51,6 @@ public class ChurchToolsUserStorageProvider implements
     // UserStorageProvider
     // No cleanup required because this provider does not use a persistent storage
     @Override
-    public void preRemove(RealmModel realm) {
-    }
-
-    @Override
-    public void preRemove(RealmModel realm, GroupModel group) {
-    }
-
-    @Override
-    public void preRemove(RealmModel realm, RoleModel role) {
-    }
-
-    @Override
     public void close() {
     }
 

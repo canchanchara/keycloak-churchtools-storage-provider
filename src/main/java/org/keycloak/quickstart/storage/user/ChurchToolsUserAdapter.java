@@ -7,6 +7,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
 import org.keycloak.storage.StorageId;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,9 @@ public class ChurchToolsUserAdapter extends AbstractAttributeUserAdapter {
                 UserModel.EMAIL, List.of(person.getEmail()),
                 UserModel.EMAIL_VERIFIED, List.of(Boolean.toString(true)),
                 UserModel.USERNAME, List.of(person.getCmsUserId()),
-                CREATED_TIMESTAMP, List.of(person.getMeta().getCreatedDate()));
+                CREATED_TIMESTAMP, List.of(Long.toString(
+                        Instant.parse(person.getMeta().getCreatedDate()).toEpochMilli()
+                ))
+        );
     }
 }
