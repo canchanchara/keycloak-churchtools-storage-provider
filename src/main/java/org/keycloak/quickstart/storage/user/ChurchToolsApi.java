@@ -5,12 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
-import org.keycloak.quickstart.storage.user.churchtools.model.LoginDto;
-import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
-import org.keycloak.quickstart.storage.user.churchtools.model.PersonListDto;
-import org.keycloak.quickstart.storage.user.churchtools.model.SearchResultDto;
-import org.keycloak.quickstart.storage.user.churchtools.model.ServerCredentials;
-import org.keycloak.quickstart.storage.user.churchtools.model.SinglePersonListDto;
+import org.keycloak.quickstart.storage.user.churchtools.model.*;
 
 import java.io.IOException;
 import java.net.CookieManager;
@@ -34,7 +29,7 @@ public class ChurchToolsApi {
     private static final Logger logger = Logger.getLogger(ChurchToolsApi.class);
 
 
-    public static UserEntity getUserByEmailOrUsername(ServerCredentials serverCredentials, CookieManager cookieManager, String email) {
+    public static PersonDto getUserByEmailOrUsername(ServerCredentials serverCredentials, CookieManager cookieManager, String email) {
 
         logger.info("Find getUserByEmail: " + email);
         try {
@@ -65,7 +60,7 @@ public class ChurchToolsApi {
         }
     }
 
-    public static UserEntity getUserById(ServerCredentials serverCredentials, CookieManager cookieManager, String id) {
+    public static PersonDto getUserById(ServerCredentials serverCredentials, CookieManager cookieManager, String id) {
 
         logger.info("getUserById id:" + id);
         try {
@@ -81,14 +76,11 @@ public class ChurchToolsApi {
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
+            if (response.statusCode() != 200) return null;
 
             SinglePersonListDto personListDto = createMapper().readValue(response.body(), SinglePersonListDto.class);
 
-            PersonDto personDto = personListDto.getData();
-
-            UserEntity userEntity = mapPerson(personDto);
-
-            return userEntity;
+            return personListDto.getData();
 
         } catch (URISyntaxException | IOException | InterruptedException e) {
             logger.error(e);
@@ -141,7 +133,7 @@ public class ChurchToolsApi {
 
             SearchResultDto searchResultDto = createMapper().readValue(response.body(), SearchResultDto.class);
 
-            return searchResultDto.getData().stream().map(e -> e.getDomainIdentifier()).toList();
+            return searchResultDto.getData().stream().map(SearchResultDataDto::getDomainIdentifier).toList();
 
         } catch (URISyntaxException | IOException | InterruptedException e) {
             logger.error(e);
@@ -152,7 +144,7 @@ public class ChurchToolsApi {
     /**
      * liefert maximal 500 Personen zurück
      */
-    public static List<UserEntity> findPersons(ServerCredentials serverCredentials, CookieManager cookieManager, String userSearchTerm, Integer firstResult, Integer maxResults) {
+    public static List<PersonDto> findPersons(ServerCredentials serverCredentials, CookieManager cookieManager, String userSearchTerm, Integer firstResult, Integer maxResults) {
 
         String personFilter = "";
 
@@ -187,8 +179,6 @@ public class ChurchToolsApi {
 
             return personList.stream()
                     .filter(p -> StringUtils.isNotEmpty(p.getCmsUserId()))
-                    .map(p -> mapPerson(p)).toList()
-                    .stream()
                     .skip(firstResult == null ? 0 : firstResult)
                     .limit(maxResults == null ? 1000 : maxResults)
                     .toList();
@@ -198,17 +188,6 @@ public class ChurchToolsApi {
             logger.error(e);
             throw new ChurchToolsException(e.getMessage());
         }
-    }
-
-    private static UserEntity mapPerson(PersonDto personDto) {
-        UserEntity userEntity = new UserEntity();
-        userEntity.setId(personDto.getId());
-        userEntity.setEmail(personDto.getEmail());
-        userEntity.setUsername(personDto.getCmsUserId());
-        userEntity.setFirstname(personDto.getFirstName());
-        userEntity.setLastname(personDto.getLastName());
-        userEntity.setCreatedDate(personDto.getMeta().getCreatedDate());
-        return userEntity;
     }
 
     public static boolean credentialsValid(ServerCredentials serverCredentials, String email, String passwort) {

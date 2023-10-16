@@ -9,11 +9,9 @@ import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
-import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
-import org.keycloak.models.cache.CachedUserModel;
-import org.keycloak.models.cache.OnUserCache;
 import org.keycloak.models.credential.PasswordCredentialModel;
+import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
 import org.keycloak.quickstart.storage.user.churchtools.model.ServerCredentials;
 import org.keycloak.storage.ReadOnlyException;
 import org.keycloak.storage.StorageId;
@@ -29,11 +27,15 @@ import java.util.stream.Stream;
 public class ChurchToolsUserStorageProvider implements
         UserStorageProvider,
         UserLookupProvider,
+        UserQueryProvider,
         CredentialInputValidator,
-        CredentialInputUpdater,
-        OnUserCache {
+        CredentialInputUpdater {
+
+    // This provider uses Keycloak's default cache for queried users. Credentials are not cached.
+    // While that would improve performance, invalidation would be challenging to implement correctly
+    // in order to prevent an attacker to use an outdated password that has just been changed.
+
     private static final Logger logger = Logger.getLogger(ChurchToolsUserStorageProvider.class);
-    public static final String PASSWORD_CACHE_KEY = UserAdapter.class.getName() + ".password";
 
     protected ComponentModel model;
     protected KeycloakSession session;
@@ -66,104 +68,80 @@ public class ChurchToolsUserStorageProvider implements
 
     // UserLookupProvider
     @Override
+    public UserModel getUserById(RealmModel realm, String id) {
+
+        final String persistenceId = StorageId.externalId(id);
+
+        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
+        PersonDto personDto = ChurchToolsApi.getUserById(serverCredentials, cookieManager, persistenceId);
+
+        if (personDto == null) {
+            logger.debug("Could not find user with id: " + id);
+            return null;
+        }
+
+        return new ChurchToolsUserAdapter(session, realm, model, personDto);
+    }
+
+    @Override
+    public UserModel getUserByUsername(RealmModel realm, String username) {
+        return getUserByIdentifier(realm, username);
+    }
+
+    @Override
+    public UserModel getUserByEmail(RealmModel realm, String email) {
+        return getUserByIdentifier(realm, email);
+    }
+
+    private UserModel getUserByIdentifier(RealmModel realm, String identifier) {
+
+        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
+        PersonDto personDto = ChurchToolsApi.getUserByEmailOrUsername(serverCredentials, cookieManager, identifier);
+
+        if (personDto == null) {
+            logger.debug("Could not find user with email or username: " + identifier);
+            return null;
+        }
+
+        return new ChurchToolsUserAdapter(session, realm, model, personDto);
+    }
+
+    // UserCountMethodsProvider
+    @Override
     public int getUsersCount(RealmModel realm) {
         CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
         return ChurchToolsApi.getPersonCount(serverCredentials, cookieManager);
     }
 
-    @Override
-    public Stream<UserModel> searchForUserStream(RealmModel realm, String search, Integer firstResult, Integer maxResults) {
-        logger.info("searchForUserStream by Searchterm firstResult" + firstResult + " maxResults: " + maxResults + " searchTerm:" + search);
-
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        List<UserEntity> persons = ChurchToolsApi.findPersons(serverCredentials, cookieManager, search, firstResult, maxResults);
-
-        return persons.stream().map(p -> mapUserEntity(p, realm)).toList().stream();
-    }
-
-    private UserModel mapUserEntity(UserEntity userEntity, RealmModel realm) {
-        return new UserAdapter(session, realm, model, userEntity);
-    }
-
+    // UserQueryMethodsProvider
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, Map<String, String> params, Integer firstResult, Integer maxResults) {
         logger.info("searchForUserStream with Search Params: firstResult" + firstResult + " maxResults " + maxResults);
 
-        String searchString = params.get("keycloak.session.realm.users.query.search");
-
-        if (searchString == null) {
-            return searchForUserStream(realm, "", firstResult, maxResults);
-        }
-
-        searchString = searchString.trim();
+        String searchString = params.get(UserModel.SEARCH);
 
         // Suche nach "*" kann Church Tools nicht verstehen, daher Suche nach "" empty String
-        if (searchString.equals("*")) {
-            return searchForUserStream(realm, "", firstResult, maxResults);
-        }
+        if (searchString == null || searchString.equals("*"))
+            searchString = "";
+        else
+            searchString = searchString.trim();
 
-        return searchForUserStream(realm, searchString, firstResult, maxResults);
+        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
+        List<PersonDto> persons = ChurchToolsApi.findPersons(serverCredentials, cookieManager, searchString, firstResult, maxResults);
+
+        return persons.stream().map(p -> new ChurchToolsUserAdapter(session, realm, model, p));
     }
 
     @Override
     public Stream<UserModel> getGroupMembersStream(RealmModel realm, GroupModel group, Integer firstResult, Integer maxResults) {
-        logger.info("getGroupMembersStream");
+        logger.info("getGroupMembersStream is not supported and returns an empty Stream");
         return Stream.empty();
     }
 
     @Override
     public Stream<UserModel> searchForUserByUserAttributeStream(RealmModel realm, String attrName, String attrValue) {
-        logger.info("searchForUserByUserAttributeStream");
+        logger.info("searchForUserByUserAttributeStream is not supported and returns an empty Stream");
         return Stream.empty();
-    }
-
-
-    @Override
-    public UserModel getUserById(RealmModel realm, String id) {
-
-        final String persistenceId = StorageId.externalId(id);
-
-        logger.info("getUserById: " + persistenceId);
-
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        UserEntity userEntity = ChurchToolsApi.getUserById(serverCredentials, cookieManager, persistenceId);
-
-        if (userEntity == null || userEntity.getId() == null || userEntity.getId().isEmpty()) {
-            logger.info("could not find user by id: " + id);
-            return null;
-        }
-
-        return new UserAdapter(session, realm, model, userEntity);
-    }
-
-    @Override
-    public UserModel getUserByUsername(RealmModel realm, String username) {
-        logger.info("getUserByUsername: " + username);
-
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        UserEntity userEntity = ChurchToolsApi.getUserByEmailOrUsername(serverCredentials, cookieManager, username);
-
-        if (userEntity == null || userEntity.getId() == null || userEntity.getId().isEmpty()) {
-            logger.info("could not find user by username: " + username);
-            return null;
-        }
-
-        return new UserAdapter(session, realm, model, userEntity);
-    }
-
-    @Override
-    public UserModel getUserByEmail(RealmModel realm, String email) {
-        logger.info("getUserByEmail: " + email);
-
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        UserEntity userEntity = ChurchToolsApi.getUserByEmailOrUsername(serverCredentials, cookieManager, email);
-
-        if (userEntity == null || userEntity.getId() == null || userEntity.getId().isEmpty()) {
-            logger.info("could not find user by email: " + email);
-            return null;
-        }
-
-        return new UserAdapter(session, realm, model, userEntity);
     }
 
     // CredentialInputValidator
