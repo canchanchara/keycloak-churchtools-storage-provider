@@ -25,7 +25,7 @@ public class ChurchToolsUserStorageProviderFactory implements UserStorageProvide
         String host = configScope.get("host");
         String loginToken = configScope.get("login-token");
         if (StringUtils.isEmpty(host) || StringUtils.isEmpty(loginToken))
-            logger.warn("ChurchTools configuration is incomplete");
+            logger.warn("ChurchTools configuration is incomplete. User Federation with ChurchTools will not work.");
 
         churchTools = ChurchToolsApi.createWithLoginToken(host, loginToken);
     }

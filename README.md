@@ -40,7 +40,7 @@ konfiguriert werden.
 
 ```properties
 spi-storage-churchtools-user-storage-host=demo.church.tools
-spi-storage-churchtools-user-storage-logintoken=DuIojxSyqCIMLf8JXEhQCshetSCZFP2dCuNIzHtgrKxqK13e80MdPY15wjt2jUNpWZzlCpEkJVTxYr6MCx3WZpmY5w8CeiwJbke1lKZ4GfD2jc3niVbiRI66obQtfJH8biXw2HXgZVbgMnK4aMQGOlY7Ssfp8SwyZMki1RoIYNBjWPAGAWyeAD5Dp1cApB74BqoWyziSTIE0EP6DQA8HV7n2IUZCVdgnlQkypcM7YeUTGiex57vdHrfH1foJvwax
+spi-storage-churchtools-user-storage-login-token=DuIojxSyqCIMLf8JXEhQCshetSCZFP2dCuNIzHtgrKxqK13e80MdPY15wjt2jUNpWZzlCpEkJVTxYr6MCx3WZpmY5w8CeiwJbke1lKZ4GfD2jc3niVbiRI66obQtfJH8biXw2HXgZVbgMnK4aMQGOlY7Ssfp8SwyZMki1RoIYNBjWPAGAWyeAD5Dp1cApB74BqoWyziSTIE0EP6DQA8HV7n2IUZCVdgnlQkypcM7YeUTGiex57vdHrfH1foJvwax
 ```
 
 Keycloak muss danach neugestartet werden.
@@ -63,7 +63,7 @@ eingerichtet werden.
 
 ### Kompatibilität
 
-Die Benutzer ID (`sub` claim) von Keycloak entspricht dem Format `f:<uuid>:<churchtools id>`.
+Die Benutzer ID (`sub` claim) von Keycloak entspricht dem Format `f:<keycloak uuid>:<churchtools id>`.
 Bei manchen Anwendungen sorgen die Doppelpunkte allerdings für Probleme: 
 - [Nextcloud (user_oidc)](https://github.com/nextcloud/user_oidc/issues/690)
 
