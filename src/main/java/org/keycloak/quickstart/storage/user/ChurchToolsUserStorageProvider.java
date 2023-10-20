@@ -11,14 +11,12 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
-import org.keycloak.quickstart.storage.user.churchtools.model.ServerCredentials;
 import org.keycloak.storage.ReadOnlyException;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.user.UserLookupProvider;
 import org.keycloak.storage.user.UserQueryProvider;
 
-import java.net.CookieManager;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -36,15 +34,14 @@ public class ChurchToolsUserStorageProvider implements
 
     private static final Logger logger = Logger.getLogger(ChurchToolsUserStorageProvider.class);
 
-    protected ComponentModel model;
-    protected KeycloakSession session;
+    private final ComponentModel model;
+    private final KeycloakSession session;
+    private final ChurchToolsApi churchTools;
 
-    private final ServerCredentials serverCredentials;
-
-    ChurchToolsUserStorageProvider(KeycloakSession session, ComponentModel model, ServerCredentials serverCredentials) {
+    ChurchToolsUserStorageProvider(KeycloakSession session, ComponentModel model, ChurchToolsApi churchTools) {
         this.session = session;
         this.model = model;
-        this.serverCredentials = serverCredentials;
+        this.churchTools = churchTools;
     }
 
     // UserStorageProvider
@@ -59,8 +56,7 @@ public class ChurchToolsUserStorageProvider implements
 
         final String persistenceId = StorageId.externalId(id);
 
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        PersonDto personDto = ChurchToolsApi.getUserById(serverCredentials, cookieManager, persistenceId);
+        PersonDto personDto = churchTools.getUserById(persistenceId);
 
         if (personDto == null) {
             logger.info("Could not find user with id: " + id);
@@ -82,8 +78,7 @@ public class ChurchToolsUserStorageProvider implements
 
     private UserModel getUserByIdentifier(RealmModel realm, String identifier) {
 
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        PersonDto personDto = ChurchToolsApi.getUserByEmailOrUsername(serverCredentials, cookieManager, identifier);
+        PersonDto personDto = churchTools.getUserByEmailOrUsername(identifier);
 
         if (personDto == null) {
             logger.info("Could not find user with email or username: " + identifier);
@@ -96,8 +91,7 @@ public class ChurchToolsUserStorageProvider implements
     // UserCountMethodsProvider
     @Override
     public int getUsersCount(RealmModel realm) {
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        return ChurchToolsApi.getPersonCount(serverCredentials, cookieManager);
+        return churchTools.getPersonCount();
     }
 
     // UserQueryMethodsProvider
@@ -113,8 +107,7 @@ public class ChurchToolsUserStorageProvider implements
         else
             searchString = searchString.trim();
 
-        CookieManager cookieManager = ChurchToolsApi.login(serverCredentials);
-        List<PersonDto> persons = ChurchToolsApi.findPersons(serverCredentials, cookieManager, searchString, firstResult, maxResults);
+        List<PersonDto> persons = churchTools.findPersons(searchString, firstResult, maxResults);
 
         return persons.stream().map(p -> new ChurchToolsUserAdapter(session, realm, model, p));
     }
@@ -146,7 +139,7 @@ public class ChurchToolsUserStorageProvider implements
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
         if (!supportsCredentialType(input.getType())) return false;
-        return ChurchToolsApi.credentialsValid(serverCredentials, user.getEmail(), input.getChallengeResponse());
+        return churchTools.credentialsValid(user.getEmail(), input.getChallengeResponse());
     }
 
     // CredentialInputUpdater

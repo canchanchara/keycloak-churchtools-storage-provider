@@ -2,7 +2,7 @@ package org.keycloak.quickstart.storage.user;
 
 public class ChurchToolsException extends RuntimeException {
 
-    public ChurchToolsException(String message) {
-        super(message);
+    public ChurchToolsException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
