@@ -1,10 +1,10 @@
-package org.keycloak.quickstart.storage.user;
+package de.canchanchara.keycloak.storage;
 
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
-import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
+import de.canchanchara.keycloak.storage.churchtools.model.PersonDto;
 import org.keycloak.storage.StorageId;
 
 import java.time.Instant;

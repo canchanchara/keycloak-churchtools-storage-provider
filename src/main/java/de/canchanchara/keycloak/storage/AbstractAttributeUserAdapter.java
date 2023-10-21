@@ -1,4 +1,4 @@
-package org.keycloak.quickstart.storage.user;
+package de.canchanchara.keycloak.storage;
 
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.LegacyUserCredentialManager;

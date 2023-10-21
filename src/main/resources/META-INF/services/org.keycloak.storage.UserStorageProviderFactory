@@ -1,1 +1,1 @@
-org.keycloak.quickstart.storage.user.ChurchToolsUserStorageProviderFactory
+de.canchanchara.keycloak.storage.ChurchToolsUserStorageProviderFactory

@@ -40,7 +40,7 @@ konfiguriert werden.
 
 ```properties
 spi-storage-churchtools-user-storage-host=demo.church.tools
-spi-storage-churchtools-user-storage-login-token=DuIojxSyqCIMLf8JXEhQCshetSCZFP2dCuNIzHtgrKxqK13e80MdPY15wjt2jUNpWZzlCpEkJVTxYr6MCx3WZpmY5w8CeiwJbke1lKZ4GfD2jc3niVbiRI66obQtfJH8biXw2HXgZVbgMnK4aMQGOlY7Ssfp8SwyZMki1RoIYNBjWPAGAWyeAD5Dp1cApB74BqoWyziSTIE0EP6DQA8HV7n2IUZCVdgnlQkypcM7YeUTGiex57vdHrfH1foJvwax
+spi-storage-churchtools-user-storage-login-token=DuIojxSyqCIM...rfH1foJvwax
 ```
 
 Keycloak muss danach neugestartet werden.

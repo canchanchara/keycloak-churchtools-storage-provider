@@ -1,4 +1,4 @@
-package org.keycloak.quickstart.storage.user;
+package de.canchanchara.keycloak.storage;
 
 import org.jboss.logging.Logger;
 import org.keycloak.component.ComponentModel;
@@ -10,7 +10,7 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
-import org.keycloak.quickstart.storage.user.churchtools.model.PersonDto;
+import de.canchanchara.keycloak.storage.churchtools.model.PersonDto;
 import org.keycloak.storage.ReadOnlyException;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;

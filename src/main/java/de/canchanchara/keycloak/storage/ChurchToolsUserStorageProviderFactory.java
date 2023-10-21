@@ -1,4 +1,4 @@
-package org.keycloak.quickstart.storage.user;
+package de.canchanchara.keycloak.storage;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;

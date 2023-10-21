@@ -14,7 +14,7 @@ target/
 
 .idea
 
-src/test/java/org/keycloak/quickstart/storage/user/ChurchToolsApiIntegrationTest.java
+src/test/java/de/canchanchara/keycloak/storage/user/ChurchToolsApiIntegrationTest.java
 
 ### Eclipse ###
 .apt_generated
@@ -40,3 +40,5 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+KeycloakSetup.md

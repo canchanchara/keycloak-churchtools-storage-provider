@@ -1,4 +1,4 @@
-package org.keycloak.quickstart.storage.user.churchtools.model;
+package de.canchanchara.keycloak.storage.churchtools.model;
 
 import java.util.List;
 

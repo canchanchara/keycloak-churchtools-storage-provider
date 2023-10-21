@@ -1,10 +1,15 @@
-package org.keycloak.quickstart.storage.user;
+package de.canchanchara.keycloak.storage;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.canchanchara.keycloak.storage.churchtools.model.LoginDto;
+import de.canchanchara.keycloak.storage.churchtools.model.PersonDto;
+import de.canchanchara.keycloak.storage.churchtools.model.PersonListDto;
+import de.canchanchara.keycloak.storage.churchtools.model.SearchResultDataDto;
+import de.canchanchara.keycloak.storage.churchtools.model.SearchResultDto;
+import de.canchanchara.keycloak.storage.churchtools.model.SinglePersonListDto;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
-import org.keycloak.quickstart.storage.user.churchtools.model.*;
 
 import java.io.IOException;
 import java.net.URI;

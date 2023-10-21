@@ -1,4 +1,4 @@
-package org.keycloak.quickstart.storage.user;
+package de.canchanchara.keycloak.storage;
 
 public class ChurchToolsException extends RuntimeException {
 
