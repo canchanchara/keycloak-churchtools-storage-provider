@@ -49,7 +49,8 @@ public class ChurchToolsApi {
         // Search may return multiple people for the same username, but we need an exact match
         for (SearchResultDataDto searchResult : searchResultDto.getData()) {
             PersonDto personDto = getUserById(searchResult.getDomainIdentifier());
-            if (personDto != null && (personDto.getEmail().equals(identifier) || personDto.getCmsUserId().equals(identifier)))
+            if (personDto != null &&
+                    (personDto.getEmail().equalsIgnoreCase(identifier) || personDto.getCmsUserId().equalsIgnoreCase(identifier)))
                 return personDto;
         }
 
@@ -134,8 +135,11 @@ public class ChurchToolsApi {
              * TODO: Per Property das verhalten bestimmen lassen
              */
             boolean loginValid = response.statusCode() == 200;
+            if (loginValid)
+                logger.info("Successfully verified credentials for: " + identifier);
+            else
+                logger.info("Invalid credentials for: " + identifier);
 
-            logger.info("credentialsValid: " + loginValid);
             return loginValid;
 
         } catch (URISyntaxException | IOException | InterruptedException e) {
