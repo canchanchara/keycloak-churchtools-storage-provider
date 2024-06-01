@@ -1,15 +1,17 @@
-# Keycloak ChurchTools Custom Storage Provider
+# Keycloak ChurchTools Storage Provider
 
 Keycloak erlaubt es externe Datenquellen anzubinden, in der die Benutzerdaten wie Benutzername und Passwort stehen.
-Church Tools bietet eine REST API, um Daten auszulesen und sich einzuloggen.
+ChurchTools bietet eine REST API, um Daten auszulesen und sich einzuloggen.
 
-Dieses kleine Projekt verbindet diese beide Funktionen, sodass man sich per OpenID Connect mit dem Church Tools
+Dieses kleine Projekt verbindet diese beide Funktionen, sodass man sich per OpenID Connect mit dem ChurchTools
 Account in allen Systemen einloggen kann, die OpenID Connect unterstützen.
 Darunter zählen Systeme wie WordPress, Synology oder Nextcloud.
 
-Getestet mit Keycloak 22.0.3.
+Getestet mit Keycloak 24.0.4.
 
 ## Installation
+
+### ChurchTools Konto für Keycloak
 
 Zunächst muss ein ChurchTools Konto für diesen Storage Provider erstellt werden:
 
@@ -31,6 +33,16 @@ Folgende Berechtigungen für das neu erstellte Konto gewähren:
 - Personen & Gruppen > Sicherheitslevel Personendaten (Stufe 1-3) `churchdb:security level person(1,2,3)`
 - Personen & Gruppen > Alle Personen des jeweiligen Bereiches sichtbar machen (Alle) `churchdb:view alldata(-1)`
 
+### Keycloak mit Docker Compose installieren
+
+Da es Zeit erfordert, sich in eine sichere Einrichtung von Keycloak mit Docker einzuarbeiten,
+bieten wir ein [Compose File](compose.yaml) als Orientierung an.
+In einer Umgebung mit NGINX Reverse Proxy ist es ausreichend, `user-storage-churchtools.jar` aus den
+[Releases](https://github.com/canchanchara/keycloak-churchtools-storage-provider/releases) herunterzuladen,
+die Passwörter und ChurchTools Zugangsdaten im Compose File anzupassen und es ansonsten unverändert zu übernehmen.
+
+### Keycloak traditionell installieren
+
 Anschließend muss die `user-storage-churchtools.jar` aus den
 [Releases](https://github.com/canchanchara/keycloak-churchtools-storage-provider/releases)
 heruntergeladen und in `keycloak/providers` gespeichert werden.
@@ -43,13 +55,15 @@ spi-storage-churchtools-user-storage-host=demo.church.tools
 spi-storage-churchtools-user-storage-login-token=DuIojxSyqCIM...rfH1foJvwax
 ```
 
-Keycloak muss danach neugestartet werden.
+### Ersteinrichtung von Keycloak
 
-Am besten legt man einen eigenen Realm an.
-Im Realm kann man unter *User Federation* den Church Tools User Storage hinzufügen.
+Nach dem ersten Start von Keycloak empfiehlt es sich, einen eigenen Realm für ChurchTools zu erstellen
+und anschließend unter _User Federation_ den Provider `Churchtools-user-storage` hinzufügen. 
 
-Anschließend muss man unter *Clients* einen neuen Klienten anlegen.
-Diese Zugangsdaten müssen dann im Zielsystem eingetragen werden.
+Anschließend kann man testweise unter _Users_ nach `*` suchen. Dann sieht man alle Personen,
+die sich künftig über Keycloak bei Drittanwendungen anmelden können.
+
+Solche Drittanwendungen wie Nextcloud, WordPress, usw. kann man unter _Clients_ hinzufügen.
 
 ## Einschränkungen
 

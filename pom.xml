@@ -11,8 +11,7 @@
   <description>User Storage Provider for Church Tools</description>
 
   <properties>
-    <version.keycloak>22.0.4</version.keycloak>
-    <arquillian-graphene.version>2.5.4</arquillian-graphene.version>
+    <version.keycloak>24.0.4</version.keycloak>
     <version.jackson>2.14.2</version.jackson>
 
     <maven.compiler.source>17</maven.compiler.source>
@@ -34,10 +33,10 @@
       <version>${version.keycloak}</version>
     </dependency>
     <dependency>
+      <!-- Required for storage base classes -->
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-model-jpa</artifactId>
       <version>${version.keycloak}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -48,28 +47,6 @@
       <groupId>org.jboss.logging</groupId>
       <artifactId>jboss-logging</artifactId>
       <version>3.5.3.Final</version>
-    </dependency>
-
-
-    <dependency>
-      <groupId>org.jboss.arquillian.graphene</groupId>
-      <artifactId>graphene-webdriver</artifactId>
-      <version>${arquillian-graphene.version}</version>
-      <type>pom</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.2.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-runner</artifactId>
-      <version>1.2.0</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
