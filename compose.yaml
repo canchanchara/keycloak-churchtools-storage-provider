@@ -1,0 +1,43 @@
+services:
+  app:
+    image: quay.io/keycloak/keycloak:24.0.4
+    restart: unless-stopped
+
+    # Building optimized images is not required for small setups. Therefore, we start Keycloak right away.
+    command: start
+
+    environment:
+      # See https://www.keycloak.org/server/all-config for a list of options
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=mariadb
+      - KC_DB_URL=jdbc:mariadb://db/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak
+      # These options assume that you run Keycloak behind a reverse proxy with TLS termination
+      # You must change these settings according to your setup to have Keycloak secured properly
+      - KC_HOSTNAME=keycloak.example.org
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_HTTP_ENABLED=true
+      # Uncomment this option if you want to run Keycloak in a folder
+      #- KC_HTTP_RELATIVE_PATH=/keycloak
+      - KC_SPI_STORAGE_CHURCHTOOLS_USER_STORAGE_HOST=example.church.tools
+      - KC_SPI_STORAGE_CHURCHTOOLS_USER_STORAGE_LOGIN_TOKEN=DuIojxSyqCIMLf8JXEhQCshetSCZFP2dCuNIzHtgrKxqK13e80MdPY15wjt2jUNpWZzlCpEkJVTxYr6MCx3WZpmY5w8CeiwJbke1lKZ4GfD2jc3niVbiRI66obQtfJH8biXw2HXgZVbgMnK4aMQGOlY7Ssfp8SwyZMki1RoIYNBjWPAGAWyeAD5Dp1cApB74BqoWyziSTIE0EP6DQA8HV7n2IUZCVdgnlQkypcM7YeUTGiex57vdHrfH1foJvwax
+      - KC_LOG_LEVEL=INFO
+
+    volumes:
+      # This assumes that you put the storage provider JAR into the same folder as your compose file
+      - ./user-storage-churchtools.jar:/opt/keycloak/providers/user-storage-churchtools.jar
+
+  db:
+    image: mariadb:10
+    restart: unless-stopped
+
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+      - MARIADB_DATABASE=keycloak
+      - MARIADB_USER=keycloak
+      - MARIADB_PASSWORD=keycloak
+
+    volumes:
+      - ./data/mysql:/var/lib/mysql
