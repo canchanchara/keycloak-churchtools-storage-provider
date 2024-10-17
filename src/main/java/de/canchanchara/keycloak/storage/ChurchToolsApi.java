@@ -13,9 +13,11 @@ import org.jboss.logging.Logger;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class ChurchToolsApi {
@@ -42,8 +44,10 @@ public class ChurchToolsApi {
 
         logger.info("Find getUserByEmail: " + identifier);
 
+        String query = URLEncoder.encode(identifier, StandardCharsets.UTF_8);
+
         SearchResultDto searchResultDto =
-                get("/api/search?query=" + identifier + "&domainTypes[]=person", SearchResultDto.class);
+                get("/api/search?query=" + query + "&domainTypes[]=person", SearchResultDto.class);
 
         // Search may return multiple people for the same username, but we need an exact match
         for (SearchResultDataDto searchResult : searchResultDto.getData()) {
