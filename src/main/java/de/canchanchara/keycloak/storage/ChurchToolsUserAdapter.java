@@ -20,17 +20,32 @@ public class ChurchToolsUserAdapter extends AbstractAttributeUserAdapter {
     public ChurchToolsUserAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, PersonDto person) {
         super(session, realm, model);
         storageId = new StorageId(model.getId(), person.getId());
-        attributes = Map.of(
-                UserModel.FIRST_NAME, List.of(person.getFirstName()),
-                UserModel.LAST_NAME, List.of(person.getLastName()),
-                UserModel.EMAIL, List.of(person.getEmail()),
-                UserModel.EMAIL_VERIFIED, List.of(Boolean.toString(true)),
-                UserModel.USERNAME, List.of(person.getCmsUserId()),
-                UserModel.ENABLED, List.of(Boolean.toString(true)),
-                CREATED_TIMESTAMP, List.of(Long.toString(
-                        Instant.parse(person.getMeta().getCreatedDate()).toEpochMilli()
-                ))
-        );
+        if (person.getImageUrl() == null) {
+            attributes = Map.of(
+                    UserModel.FIRST_NAME, List.of(person.getFirstName()),
+                    UserModel.LAST_NAME, List.of(person.getLastName()),
+                    UserModel.EMAIL, List.of(person.getEmail()),
+                    UserModel.EMAIL_VERIFIED, List.of(Boolean.toString(true)),
+                    UserModel.USERNAME, List.of(person.getCmsUserId()),
+                    UserModel.ENABLED, List.of(Boolean.toString(true)),
+                    CREATED_TIMESTAMP, List.of(Long.toString(
+                            Instant.parse(person.getMeta().getCreatedDate()).toEpochMilli()
+                    ))
+            );
+        } else {
+            attributes = Map.of(
+                    UserModel.FIRST_NAME, List.of(person.getFirstName()),
+                    UserModel.LAST_NAME, List.of(person.getLastName()),
+                    UserModel.EMAIL, List.of(person.getEmail()),
+                    UserModel.EMAIL_VERIFIED, List.of(Boolean.toString(true)),
+                    UserModel.USERNAME, List.of(person.getCmsUserId()),
+                    UserModel.ENABLED, List.of(Boolean.toString(true)),
+                    PICTURE, List.of(person.getImageUrl()),
+                    CREATED_TIMESTAMP, List.of(Long.toString(
+                            Instant.parse(person.getMeta().getCreatedDate()).toEpochMilli()
+                    ))
+            );
+        }
     }
 
     @Override
