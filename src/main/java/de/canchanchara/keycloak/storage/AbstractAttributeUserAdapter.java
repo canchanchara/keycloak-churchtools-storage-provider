@@ -16,6 +16,7 @@ import java.util.stream.Stream;
  * AbstractUserAdapterFederatedStorage which is intended for bidirectional sync implementing UserFederatedStorageProvider.
  */
 public abstract class AbstractAttributeUserAdapter extends AbstractUserAdapter {
+    public static final String PICTURE = "picture";
     public static final String CREATED_TIMESTAMP = "createdTimestamp";
 
     public AbstractAttributeUserAdapter(KeycloakSession session, RealmModel realm, ComponentModel storageProviderModel) {
@@ -31,7 +32,7 @@ public abstract class AbstractAttributeUserAdapter extends AbstractUserAdapter {
     public String getFirstAttribute(String name) {
         List<String> values = getAttributes().get(name);
         if (values != null && !values.isEmpty())
-            return values.get(0);
+            return values.getFirst();
         else
             return null;
     }
