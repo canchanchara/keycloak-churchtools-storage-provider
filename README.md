@@ -7,7 +7,7 @@ Dieses kleine Projekt verbindet diese beide Funktionen, sodass man sich per Open
 Account in allen Systemen einloggen kann, die OpenID Connect unterstützen.
 Darunter zählen Systeme wie WordPress, Synology oder Nextcloud.
 
-Getestet mit Keycloak 26.0.0.
+Getestet mit Keycloak 26.0.5.
 
 ## Installation
 
