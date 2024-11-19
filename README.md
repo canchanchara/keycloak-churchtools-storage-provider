@@ -7,7 +7,7 @@ Dieses kleine Projekt verbindet diese beide Funktionen, sodass man sich per Open
 Account in allen Systemen einloggen kann, die OpenID Connect unterstützen.
 Darunter zählen Systeme wie WordPress, Synology oder Nextcloud.
 
-Getestet mit Keycloak 24.0.4.
+Getestet mit Keycloak 26.0.5.
 
 ## Installation
 
@@ -83,7 +83,7 @@ Bei manchen Anwendungen sorgen die Doppelpunkte allerdings für Probleme:
 
 ## Entwicklung
 
-Das Projekt kann mit Java 17 und Maven gebaut werden.
+Das Projekt kann mit Java 21 und Maven gebaut werden.
 
 ```bash
 mvn clean install

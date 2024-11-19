@@ -1,6 +1,6 @@
 services:
   app:
-    image: quay.io/keycloak/keycloak:24.0.4
+    image: quay.io/keycloak/keycloak:26.0.5
     restart: unless-stopped
 
     # Building optimized images is not required for small setups. Therefore, we start Keycloak right away.
