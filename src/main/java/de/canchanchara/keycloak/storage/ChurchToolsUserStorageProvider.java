@@ -97,17 +97,11 @@ public class ChurchToolsUserStorageProvider implements
     // UserQueryMethodsProvider
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, Map<String, String> params, Integer firstResult, Integer maxResults) {
-        logger.info("searchForUserStream with Search Params: firstResult" + firstResult + " maxResults " + maxResults);
-
         String searchString = params.get(UserModel.SEARCH);
 
-        // Suche nach "*" kann Church Tools nicht verstehen, daher Suche nach "" empty String
-        if (searchString == null || searchString.equals("*"))
-            searchString = "";
-        else
-            searchString = searchString.trim();
-
         List<PersonDto> persons = churchTools.findPersons(searchString, firstResult, maxResults);
+
+        logger.info("searchForUserStream with firstResult = %d, maxResults = %d found %d results".formatted(firstResult, maxResults, persons.size()));
 
         return persons.stream().map(p -> new ChurchToolsUserAdapter(session, realm, model, p));
     }

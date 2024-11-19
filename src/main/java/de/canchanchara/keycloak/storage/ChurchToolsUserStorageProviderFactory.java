@@ -1,6 +1,5 @@
 package de.canchanchara.keycloak.storage;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.component.ComponentModel;
@@ -24,7 +23,7 @@ public class ChurchToolsUserStorageProviderFactory implements UserStorageProvide
     public void init(Config.Scope configScope) {
         String host = configScope.get("host");
         String loginToken = configScope.get("login-token");
-        if (StringUtils.isEmpty(host) || StringUtils.isEmpty(loginToken))
+        if (host == null || host.isEmpty() || loginToken == null || loginToken.isEmpty())
             logger.warn("ChurchTools configuration is incomplete. User Federation with ChurchTools will not work.");
 
         churchTools = ChurchToolsApi.createWithLoginToken(host, loginToken);

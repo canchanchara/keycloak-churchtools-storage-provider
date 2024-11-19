@@ -8,15 +8,16 @@ import de.canchanchara.keycloak.storage.churchtools.model.PersonListDto;
 import de.canchanchara.keycloak.storage.churchtools.model.SearchResultDataDto;
 import de.canchanchara.keycloak.storage.churchtools.model.SearchResultDto;
 import de.canchanchara.keycloak.storage.churchtools.model.SinglePersonListDto;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class ChurchToolsApi {
@@ -43,8 +44,10 @@ public class ChurchToolsApi {
 
         logger.info("Find getUserByEmail: " + identifier);
 
+        String query = URLEncoder.encode(identifier, StandardCharsets.UTF_8);
+
         SearchResultDto searchResultDto =
-                get("/api/search?query=" + identifier + "&domainTypes[]=person", SearchResultDto.class);
+                get("/api/search?query=" + query + "&domainTypes[]=person", SearchResultDto.class);
 
         // Search may return multiple people for the same username, but we need an exact match
         for (SearchResultDataDto searchResult : searchResultDto.getData()) {
@@ -93,10 +96,18 @@ public class ChurchToolsApi {
 
         logger.info("findPersons searchTerm:" + userSearchTerm + " firstResult: " + firstResult + " maxResults: " + maxResults);
 
+        if (userSearchTerm == null || userSearchTerm.isBlank())
+            return List.of();
+
         StringBuilder personFilter = new StringBuilder();
 
-        if (StringUtils.isNotEmpty(userSearchTerm)) {
+        // ChurchTools does not support wildcard search
+        if (!userSearchTerm.equals("*")) {
+
             List<String> personIds = findPersonsBySearchTerm(userSearchTerm);
+            if (personIds.isEmpty())
+                return List.of();
+
             for (String personId : personIds) {
                 personFilter.append("&ids%5B%5D=");
                 personFilter.append(personId);
@@ -106,7 +117,7 @@ public class ChurchToolsApi {
         PersonListDto personListDto = get("/api/persons?is_archived=false&page=" + 1 + "&limit=" + 500 + personFilter, PersonListDto.class);
 
         return personListDto.getData().stream()
-                .filter(p -> StringUtils.isNotEmpty(p.getCmsUserId()))
+                .filter(p -> p.getCmsUserId() != null && !p.getCmsUserId().isEmpty())
                 .skip(firstResult == null ? 0 : firstResult)
                 .limit(maxResults == null ? 1000 : maxResults)
                 .toList();

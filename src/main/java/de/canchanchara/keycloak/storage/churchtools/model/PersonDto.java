@@ -7,6 +7,7 @@ public class PersonDto {
     private String lastName;
     private String email;
     private String cmsUserId;
+    private String imageUrl;
     private PersonMetaDto meta;
 
     public PersonMetaDto getMeta() {
@@ -55,5 +56,13 @@ public class PersonDto {
 
     public void setCmsUserId(String cmsUserId) {
         this.cmsUserId = cmsUserId;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
